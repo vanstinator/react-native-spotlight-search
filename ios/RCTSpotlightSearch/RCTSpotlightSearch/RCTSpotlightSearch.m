@@ -12,14 +12,11 @@
 #import "RCTSpotlightSearch.h"
 #import <React/RCTEventDispatcher.h>
 
-static NSString *const kHandleContinueUserActivityNotification = @"handleContinueUserActivity";
-static NSString *const kUserActivityKey = @"userActivity";
 static NSString *const kSpotlightSearchItemTapped = @"spotlightSearchItemTapped";
 static NSString * initialIdentifier = @"";
 
 @interface RCTSpotlightSearch ()
 
-@property (nonatomic, strong) id<NSObject> continueUserActivityObserver;
 @property (nonatomic, strong) id<NSObject> bundleDidLoadObserver;
 @property (nonatomic, assign) BOOL hasListeners;
 
@@ -35,12 +32,6 @@ RCT_EXPORT_MODULE();
 - (instancetype)init {
     if ((self = [super init])) {
         __weak typeof(self) weakSelf = self;
-        _continueUserActivityObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kHandleContinueUserActivityNotification
-                                                                                          object:nil
-                                                                                           queue:[NSOperationQueue mainQueue]
-                                                                                      usingBlock:^(NSNotification * _Nonnull note) {
-                                                                                          [weakSelf handleContinueUserActivity:note.userInfo[kUserActivityKey]];
-                                                                                      }];
         _bundleDidLoadObserver = [[NSNotificationCenter defaultCenter] addObserverForName:RCTJavaScriptDidLoadNotification
                                                                                    object:nil
                                                                                     queue:[NSOperationQueue mainQueue]
@@ -54,7 +45,6 @@ RCT_EXPORT_MODULE();
 - (void)dealloc {
     [[[self class] activityQueue] removeAllObjects];
     
-    [[NSNotificationCenter defaultCenter] removeObserver:_continueUserActivityObserver];
     [[NSNotificationCenter defaultCenter] removeObserver:_bundleDidLoadObserver];
 }
 
@@ -100,9 +90,6 @@ RCT_EXPORT_MODULE();
 }
 
 + (void)handleContinueUserActivity:(NSUserActivity *)userActivity {
-    [[NSNotificationCenter defaultCenter] postNotificationName:kHandleContinueUserActivityNotification
-                                                        object:nil
-                                                      userInfo:@{kUserActivityKey: userActivity}];
     [[[self class] activityQueue] addObject:userActivity];
 }
 
